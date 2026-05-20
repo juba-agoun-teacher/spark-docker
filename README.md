@@ -203,10 +203,28 @@ gunzip meta_Automotive.jsonl.gz
 
 ### Transfert dans jupyter 
 
-Dans la machine hôte, placer les fichiers :
+Il y a des restrictions de permissions sur les dossiers ``work`` et ``stream-read`` qui sont montés depuis la machine hôte qu'il faut fixer :
+
+- Sur Linux (dans le cas de codespace par exemple):
+
+```bash
+# Accorder les permissions pleines (attention à la sécurité, dans la vraie vie)
+sudo chmod -R 777 work stream-read
+```
+
+
+- Sur Widows via powerShell:
+
+```bash
+# Accorder les permissions complètes
+icacls "C:\chemin\vers\spark-streaming\work" /grant:r "%username%:(F)" /t /c
+icacls "C:\chemin\vers\spark-streaming\stream-read" /grant:r "%username%:(F)" /t /c
+```
+
+Maintenatn depuis la machine hôte, ou directement jupyter, placer les fichiers dans :
 
 ```text
-notebook
+work
 ```
 
 **Question** : Expliquez, du point de vue architectural, où se situe chaque élément (L'hôte, les fichiers, spark, le master ...)
