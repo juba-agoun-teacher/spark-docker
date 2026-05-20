@@ -40,20 +40,22 @@ version: "3.8"
 services:
   
   spark-master:
-    image: apache/spark:3.5.1
+    image: apache/spark:3.5.0
     container_name: spark-master
     ports:
       - "8080:8080"
       - "7077:7077"
-      - "4040:4040"
+
     environment:
       - SPARK_MODE=master
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     volumes:
       - spark-data:/opt/spark/work-dir
+      - ./stream-read:/opt/spark/stream-read
+      - ./work:/home/jovyan/work
 
   spark-worker-1:
-    image: apache/spark:3.5.1
+    image: apache/spark:3.5.0
     container_name: spark-worker-1
     depends_on:
       - spark-master
@@ -67,9 +69,10 @@ services:
       spark://spark-master:7077
     volumes:
       - spark-data:/opt/spark/work-dir
-
+      - ./stream-read:/opt/spark/stream-read
+      - ./work:/home/jovyan/work
   spark-worker-2:
-    image: apache/spark:3.5.1
+    image: apache/spark:3.5.0
     container_name: spark-worker-2
     depends_on:
       - spark-master
@@ -83,9 +86,10 @@ services:
       spark://spark-master:7077
     volumes:
       - spark-data:/opt/spark/work-dir
-
+      - ./stream-read:/opt/spark/stream-read
+      - ./work:/home/jovyan/work
   spark-worker-3:
-    image: apache/spark:3.5.1
+    image: apache/spark:3.5.0
     container_name: spark-worker-3
     depends_on:
       - spark-master
@@ -99,18 +103,28 @@ services:
       spark://spark-master:7077
     volumes:
       - spark-data:/opt/spark/work-dir
+      - ./stream-read:/opt/spark/stream-read
 
   jupyter:
     image: jupyter/pyspark-notebook:latest
     container_name: spark-jupyter
+    user: root 
     ports:
       - "8888:8888"
+      - "4040:4040"
     environment:
       - JUPYTER_ENABLE_LAB=yes
+      - NB_UID=1000
+      - CHOWN_EXTRA=/home/jovyan/stream-read   # ← corrige les permissions au démarrage
+      - CHOWN_EXTRA_OPTS=-R
     volumes:
+      - ./stream-read:/opt/spark/stream-read
       - ./work:/home/jovyan/work
-    command: start-notebook.sh --NotebookApp.token='spark'
-
+    command: >
+      bash -c "
+        ln -sf /opt/spark/stream-read /home/jovyan/stream-read &&
+        start-notebook.sh --NotebookApp.token='spark'
+      "
 volumes:
   spark-data:
 ```
