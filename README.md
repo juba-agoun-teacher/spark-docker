@@ -403,7 +403,7 @@ schema = StructType([
 
 Ensuite :
 ````python
-stream_memory_query = ( spark.read 
+spark_df = ( spark.read 
     .format("json") 
     .schema(schema) 
     .load("work/meta_Automotive.jsonl")
