@@ -23,9 +23,9 @@ Dans ce TP, nous allons utiliser :
 * X Spark Workers
 * X environnement Jupyter avec PySpark
 
-L’ensemble sera déployé avec Docker Compose. 
+L’ensemble sera déployé avec Docker Compose.
 
-**Question:** Remplacer le X par le nombe adéquat a la lecture de docker compose. 
+**Question :** Remplacer le X par le nombre adéquat à la lecture du fichier Docker Compose.
 
 ---
 
@@ -104,6 +104,7 @@ services:
     volumes:
       - spark-data:/opt/spark/work-dir
       - ./stream-read:/opt/spark/stream-read
+      - ./work:/home/jovyan/work
 
   jupyter:
     image: jupyter/pyspark-notebook:latest
@@ -127,6 +128,7 @@ services:
       "
 volumes:
   spark-data:
+
 ```
 
 ---
@@ -144,7 +146,7 @@ Vérifier ensuite les conteneurs :
 ```bash
 docker ps
 ```
-**Question:** Qu'obtenevez  vous ?
+**Question :** Qu'obtenez-vous ?
 
 ---
 
@@ -213,15 +215,7 @@ sudo chmod -R 777 work stream-read
 ```
 
 
-- Sur Widows via powerShell:
-
-```bash
-# Accorder les permissions complètes
-icacls "C:\chemin\vers\spark-streaming\work" /grant:r "%username%:(F)" /t /c
-icacls "C:\chemin\vers\spark-streaming\stream-read" /grant:r "%username%:(F)" /t /c
-```
-
-Maintenatn depuis la machine hôte, ou directement jupyter, placer les fichiers dans :
+Maintenant, depuis la machine hôte ou directement dans Jupyter, placer les fichiers dans :
 
 ```text
 work
@@ -313,11 +307,11 @@ pandas_df = pd.read_json(
 
 ---
 
-## Vos Observations
+## Vos observations
 
 Selon votre machine :
 
-> Completer moi ....
+> Complétez-moi.
 
 ---
 
@@ -377,6 +371,46 @@ spark_df = spark.read.json(
     'work/meta_Automotive.jsonl'
 )
 ```
+
+Vous allez remarquer qu'il existe une erreur due à la qualité des données dans le fichier.
+
+Pour y remédier, nous allons définir le schéma qui correspond aux données.
+
+````python
+from pyspark.sql.types import *
+from pyspark.sql import functions as F
+
+# Schéma 
+schema = StructType([
+    StructField("parent_asin",     StringType(),  True),
+    StructField("title",           StringType(),  True),
+    StructField("description",     ArrayType(StringType()), True),
+    StructField("features",        ArrayType(StringType()), True),
+    StructField("categories",      ArrayType(StringType()), True),
+    StructField("price",           StringType(),  True),
+    StructField("average_rating",  DoubleType(),  True),
+    StructField("rating_number",   LongType(),    True),
+    StructField("main_category",   StringType(),  True),
+    StructField("store",           StringType(),  True),
+    StructField("subtitle",        StringType(),  True),
+    StructField("author",          StringType(),  True),
+    StructField("bought_together", ArrayType(StringType()), True),
+    StructField("details",         MapType(StringType(), StringType()), True),
+    StructField("images",          ArrayType(MapType(StringType(), StringType())), True),
+    StructField("videos",          ArrayType(MapType(StringType(), StringType())), True),
+])
+````
+
+Ensuite :
+````python
+stream_memory_query = ( spark.read 
+    .format("json") 
+    .schema(schema) 
+    .load("work/meta_Automotive.jsonl")
+  )
+````
+
+
 
 ---
 
